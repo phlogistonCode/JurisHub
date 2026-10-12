@@ -1,16 +1,10 @@
-package dev.phlogiston.jurishub
+package dev.phlogiston.jurishub.core
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-
-internal enum class ComparisonMode(val label: String) {
-    LINES("По строкам"),
-    WORDS("По словам целиком"),
-    CHARACTERS("По символам")
-}
 
 internal fun createInlineDiff(left: String, right: String, mode: ComparisonMode): Pair<AnnotatedString, AnnotatedString> {
     val leftParts = tokenize(left, mode)
