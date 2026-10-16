@@ -79,6 +79,10 @@ fun DesktopApp() {
                                     leftFile = chooseFile()
                                     error = null
                                 },
+                                onFileDropped = {
+                                    leftFile = it
+                                    error = null
+                                },
                                 modifier = Modifier.weight(1f)
                             )
                             DocumentChooser(
@@ -86,6 +90,10 @@ fun DesktopApp() {
                                 file = rightFile,
                                 onChoose = {
                                     rightFile = chooseFile()
+                                    error = null
+                                },
+                                onFileDropped = {
+                                    rightFile = it
                                     error = null
                                 },
                                 modifier = Modifier.weight(1f)

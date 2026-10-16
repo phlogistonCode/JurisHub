@@ -6,6 +6,8 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 
+internal data class AlignedDiffRow(val left: AnnotatedString?, val right: AnnotatedString?)
+
 internal fun createInlineDiff(left: String, right: String, mode: ComparisonMode): Pair<AnnotatedString, AnnotatedString> {
     val leftParts = tokenize(left, mode)
     val rightParts = tokenize(right, mode)
@@ -18,6 +20,47 @@ internal fun createInlineDiff(left: String, right: String, mode: ComparisonMode)
     }
     return annotated(leftParts, leftChanged, Color(0xFFFFCDD2)) to
         annotated(rightParts, rightChanged, Color(0xFFC8E6C9))
+}
+
+internal fun createAlignedLineDiff(left: String, right: String): List<AlignedDiffRow> {
+    fun splitLines(text: String) = if (text.isEmpty()) emptyList() else text.split('\n')
+    val leftLines = splitLines(left)
+    val rightLines = splitLines(right)
+    val rows = leftLines.size + 1
+    val columns = rightLines.size + 1
+    val lcs = Array(rows) { IntArray(columns) }
+    for (i in leftLines.indices.reversed()) {
+        for (j in rightLines.indices.reversed()) {
+            lcs[i][j] = if (leftLines[i] == rightLines[j]) lcs[i + 1][j + 1] + 1
+            else maxOf(lcs[i + 1][j], lcs[i][j + 1])
+        }
+    }
+
+    val aligned = mutableListOf<AlignedDiffRow>()
+    var i = 0
+    var j = 0
+    while (i < leftLines.size || j < rightLines.size) {
+        if (i < leftLines.size && j < rightLines.size && leftLines[i] == rightLines[j]) {
+            aligned += AlignedDiffRow(AnnotatedString(leftLines[i++]), AnnotatedString(rightLines[j++]))
+            continue
+        }
+
+        val removed = mutableListOf<String>()
+        val added = mutableListOf<String>()
+        while (i < leftLines.size && j < rightLines.size && leftLines[i] != rightLines[j]) {
+            if (lcs[i + 1][j] >= lcs[i][j + 1]) removed += leftLines[i++] else added += rightLines[j++]
+        }
+        while (i < leftLines.size && (j == rightLines.size || lcs[i + 1][j] >= lcs[i][j + 1])) removed += leftLines[i++]
+        while (j < rightLines.size && (i == leftLines.size || lcs[i][j + 1] > lcs[i + 1][j])) added += rightLines[j++]
+
+        repeat(maxOf(removed.size, added.size)) { index ->
+            aligned += AlignedDiffRow(
+                removed.getOrNull(index)?.let(::AnnotatedString),
+                added.getOrNull(index)?.let(::AnnotatedString)
+            )
+        }
+    }
+    return aligned
 }
 
 private fun markChanges(left: List<String>, right: List<String>): Pair<BooleanArray, BooleanArray> {
