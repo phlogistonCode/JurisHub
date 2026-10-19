@@ -46,7 +46,34 @@ internal fun SideBySideDiffView(
             AlignedDiffRow(leftLine, rightLine)
         }
     }
+    val similarity = remember(alignedRows) {
+        val leftLines = alignedRows.count { it.left != null }
+        val rightLines = alignedRows.count { it.right != null }
+        val unchangedLines = alignedRows.count { row ->
+            row.left != null && row.right != null && row.left.toString() == row.right.toString()
+        }
+        val totalLines = maxOf(leftLines, rightLines)
+        if (totalLines == 0) 100 else (unchangedLines * 100 / totalLines)
+    }
+    val addedLines = alignedRows.count { it.left == null && it.right != null }
+    val removedLines = alignedRows.count { it.left != null && it.right == null }
+    val changedLines = alignedRows.count {
+        it.left != null && it.right != null && it.left.toString() != it.right.toString()
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Text("Схожесть: $similarity%", style = MaterialTheme.typography.titleMedium)
+                Text("Добавлено: $addedLines", color = Color(0xFF2E7D32))
+                Text("Изменено: $changedLines", color = Color(0xFFEF6C00))
+                Text("Удалено: $removedLines", color = Color(0xFFC62828))
+            }
+        }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             listOf("Документ 1" to alignedRows.map { it.left }, "Документ 2" to alignedRows.map { it.right }).forEach { (title, lines) ->
                 Card(modifier = Modifier.weight(1f)) {
@@ -109,7 +136,7 @@ private fun lineAt(text: AnnotatedString, index: Int): AnnotatedString {
 private fun SideBySideDiffViewPreview() {
     SideBySideDiffView(
         Pair("asdaaaa", "dsaaaaaaa"),
-        Pair(AnnotatedString("asddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasdddddd"), AnnotatedString("12312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456")),
+        Pair(AnnotatedString("asddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasddddddasdddddd"), AnnotatedString("12312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456123124234234534561231242342345345612312423423453456")),
         "Monospace",
         true
     )
